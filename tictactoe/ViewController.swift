@@ -14,6 +14,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var scoreLabel: UILabel!
     
     private var game = GameState()
+    private var npc = Computer()
     private var recognizer: UITapGestureRecognizer?
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -21,24 +22,35 @@ class ViewController: UIViewController {
     
     /**
      * Event listener every time a tile button is clicked.
+     * This is the start of every game loop.
      */
     @IBAction func tileClick(_ tile: AnyObject) {
-        // NOTE: the tag starts off with index 1
-        if (!game.play(tile.tag - 1)) {
+        // NOTE: the tag starts off with index 1.
+        if !game.play(tile.tag - 1) {
             return
         }
-        
-        updateTile(tile)
-        if game.isOver() {
-            game.end()
-            renderEndState()
+        // Update the player's tile.
+        if !updateTile(tile, 0), let compTile = self.view.viewWithTag(npc.move()) as? UIButton {
+            game.set(compTile.tag - 1, 1)
+            // If the game is still playable after the player's turn, then update the computer's tile.
+            updateTile(compTile, 1)
         }
     }
     
-    func updateTile(_ tile: AnyObject) {
+    /**
+     * Update the board tile and check the current state of the game.
+     * @return true if the game is still playable, false otherwise.
+     */
+    func updateTile(_ tile: AnyObject, _ player: Int) -> Bool {
         // Grab the respective image and update the image view.
-        let imageType = game.player == 1 ? "Circle" : "Cross"
+        let imageType = player == 1 ? "Circle" : "Cross"
         tile.setImage(UIImage(named: imageType), for: UIControlState())
+        if game.isOver() {
+            game.end()
+            renderEndState()
+            return false
+        }
+        return true
     }
     
     func renderEndState() {

@@ -15,14 +15,12 @@ enum State: String {
 
 class GameState {
     
-    public private(set) var player: Int // The current player.
     public private(set) var score: Int
     public private(set) var state: State // The current playing state of the game.
     private var board: [Int] // The current state of the board.
     private let winningCombo: [[Int]] // The 8 possible winning combinations.
     
     init() {
-        self.player = 0
         self.score = 0
         self.board = [ -1, -1, -1, -1, -1, -1, -1, -1, -1 ]
         self.winningCombo =  [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]]
@@ -32,18 +30,19 @@ class GameState {
     func play(_ index: Int) -> Bool {
         // Only allow clicks on unselected/unvisited tiles.
         // Also, only allow clicks if the game is active.
+        // The player is able to make the move if all of the following are true.
+        // 1. The board spot is empty
+        // 2. The game is currently being played
         if board[index] >= 0 && state == State.Progress {
             return false
         }
         
         // Update the board
-        board[index] = player
-        player ^= 1 // XOR with 1 to flip between 0 and 1.
+        set(index, 0)
         return true
     }
     
     func restart() {
-        player = 0
         board = [ -1, -1, -1, -1, -1, -1, -1, -1, -1 ]
         state = State.Progress
     }
@@ -58,6 +57,15 @@ class GameState {
         }
     }
     
+    /**
+     * Update the board state.
+     * @param index - the index of the tile.
+     * @param player - the player choosing the tile.
+     */
+    func set(_ index: Int, _ player: Int) {
+        board[index] = player
+    }
+
     func isOver() -> Bool {
         return didPlayerWin() || isStalemate()
     }
@@ -71,7 +79,6 @@ class GameState {
             let i = combo[0]
             let j = combo[1]
             let k = combo[2]
-            print("\(player) \(board[i]) \(board[j]) \(board[k])")
             if board[i] >= 0 && board[i] == board[j] && board[j] == board[k] {
                 return true
             }
